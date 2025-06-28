@@ -1,4 +1,7 @@
-# Backend API Endpoints
+# Backend API Documentation
+
+This file provides a structured reference for all backend API endpoints available in the chat application. It covers routes for authentication, user management, chat creation and interaction, message handling, and static file access. Each section lists the HTTP method, route, expected payload or parameters, and a brief explanation of its purpose.
+
 
 ## Table of Contents
 
