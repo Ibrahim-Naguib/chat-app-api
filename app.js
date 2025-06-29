@@ -20,6 +20,8 @@ import { AppError } from './utils/errors/AppError.js';
 
 const app = express();
 
+app.set('trust proxy', 1);
+
 // Get directory path for ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
