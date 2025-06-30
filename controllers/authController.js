@@ -149,16 +149,20 @@ export const resetPassword = asyncHandler(async (req, res) => {
 });
 
 // Get socket token endpoint - requires API authentication via cookies
+// This endpoint uses cookie-based authentication to verify the user
+// and then issues a JWT token specifically for Socket.IO authentication
 export const getSocketToken = asyncHandler(async (req, res) => {
   // This endpoint uses the existing auth middleware (cookie-based)
-  // to verify the user and then issues a socket-specific token
+  // to verify the user and then issues a socket-specific JWT token
   const userId = req.user.id;
+  console.log('Generating socket JWT token for user:', userId);
 
   const socketToken = generateSocketToken(userId);
 
   res.json({
     socketToken,
     expiresIn: '1h',
-    message: 'Socket token generated successfully',
+    message: 'Socket JWT token generated successfully',
+    note: 'This token is for Socket.IO authentication only, separate from API cookies',
   });
 });

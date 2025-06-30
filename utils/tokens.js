@@ -13,7 +13,8 @@ export const generateTokens = (userId) => {
   return { accessToken, refreshToken };
 };
 
-// Generate socket-specific JWT token (separate from API tokens)
+// Generate socket-specific JWT token (completely separate from API tokens and cookies)
+// This token is used exclusively for Socket.IO authentication
 export const generateSocketToken = (userId) => {
   return jwt.sign(
     {

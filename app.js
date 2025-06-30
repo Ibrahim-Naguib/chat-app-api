@@ -20,6 +20,7 @@ import { AppError } from './utils/errors/AppError.js';
 
 const app = express();
 
+// Trust proxy for accurate IP detection (required for Vercel/proxies)
 app.set('trust proxy', 1);
 
 // Get directory path for ES modules

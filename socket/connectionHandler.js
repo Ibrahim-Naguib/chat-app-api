@@ -5,19 +5,23 @@ import { emitUpdateOnlineUsers } from './emitters.js';
 
 const onlineUsers = new Map();
 
-// Socket authentication middleware - uses auth object only
+// Socket authentication middleware - JWT ONLY (NO COOKIES)
+// This middleware enforces JWT-based authentication for Socket.IO connections
+// and explicitly does NOT use cookies for authentication
 const authMiddleware = async (socket, next) => {
   try {
+    // ONLY check for JWT token in the auth object - NO cookie fallback
     const token = socket.handshake.auth?.token;
 
-    console.log('Socket Auth Token:', token ? 'Token received' : 'No token');
+    console.log('Socket Auth - JWT Token:', token ? 'Token received' : 'No token found');
 
     if (!token) {
-      console.error('Socket Auth Error: No token found in auth object');
-      console.log('Auth object:', socket.handshake.auth);
-      return next(new Error('Token is required for socket authentication'));
+      console.error('Socket Auth Error: No JWT token found in auth object');
+      console.log('Auth object received:', socket.handshake.auth);
+      return next(new Error('JWT token is required for socket authentication'));
     }
 
+    // Verify the JWT token using socket-specific secret
     const decoded = jwt.verify(
       token,
       config.jwtSocketSecret || config.jwtAccessSecret
@@ -29,11 +33,11 @@ const authMiddleware = async (socket, next) => {
     }
 
     socket.userId = decoded.id;
-    console.log(`Socket authenticated for user: ${decoded.id}`);
+    console.log(`Socket authenticated successfully for user: ${decoded.id} (JWT-based)`);
     next();
   } catch (error) {
-    console.error('Socket Authentication Error:', error.message);
-    return next(new Error('Authentication failed'));
+    console.error('Socket JWT Authentication Error:', error.message);
+    return next(new Error('Socket JWT authentication failed'));
   }
 };
 
