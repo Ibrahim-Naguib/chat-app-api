@@ -9,12 +9,22 @@ export const initSocket = (server) => {
     cors: {
       origin: config.allowedOrigins?.split(',') || ['http://localhost:4000'],
       credentials: true,
+      methods: ['GET', 'POST'],
+      allowedHeaders: ['Authorization', 'Content-Type'],
     },
+    // Add these for better production support
+    allowEIO3: true,
+    transports: ['websocket', 'polling'],
+    upgradeTimeout: 30000,
+    pingTimeout: 60000,
+    pingInterval: 25000,
     // Reconnection config
     connectionStateRecovery: {
       maxDisconnectionDuration: 2 * 60 * 1000, // 2 minutes
     },
   });
+
+  console.log('Socket.IO server initialized');
 
   // Handle all socket connections
   handleConnection(io);

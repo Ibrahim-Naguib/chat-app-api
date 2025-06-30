@@ -8,6 +8,7 @@ import {
   forgotPassword,
   verifyResetCode,
   resetPassword,
+  getSocketToken,
 } from '../controllers/authController.js';
 import {
   signupValidation,
@@ -22,6 +23,7 @@ router.post('/signup', signupValidation, signup);
 router.post('/login', loginValidation, login);
 router.post('/refresh', refresh);
 router.post('/logout', protect, logout);
+router.get('/socket-token', protect, getSocketToken);
 router.post('/forgotPassword', forgotPasswordValidation, forgotPassword);
 router.post('/verifyResetCode', verifyResetCodeValidation, verifyResetCode);
 router.put('/resetPassword', resetPasswordValidation, resetPassword);

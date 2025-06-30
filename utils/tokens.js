@@ -13,18 +13,33 @@ export const generateTokens = (userId) => {
   return { accessToken, refreshToken };
 };
 
+// Generate socket-specific JWT token (separate from API tokens)
+export const generateSocketToken = (userId) => {
+  return jwt.sign(
+    {
+      id: userId,
+      type: 'socket', // Mark this as a socket-specific token
+    },
+    config.jwtSocketSecret || config.jwtAccessSecret, // Fallback to access secret if socket secret not set
+    {
+      expiresIn: '1h', // Longer expiry for socket connections
+    }
+  );
+};
+
 export const setTokenCookies = (res, accessToken, refreshToken) => {
   res.cookie('accessToken', accessToken, {
     httpOnly: true,
     secure: config.nodeEnv === 'production',
-    sameSite: 'lax',
+    sameSite: 'None',
     maxAge: 15 * 60 * 1000, // 15 minutes
+    path: '/',
   });
 
   res.cookie('refreshToken', refreshToken, {
     httpOnly: true,
     secure: config.nodeEnv === 'production',
-    sameSite: 'lax',
+    sameSite: 'None',
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   });
 };
@@ -33,7 +48,7 @@ export const clearTokenCookies = (res) => {
   const cookieOptions = {
     httpOnly: true,
     secure: config.nodeEnv === 'production',
-    sameSite: 'lax',
+    sameSite: 'None',
   };
 
   res.clearCookie('accessToken', cookieOptions);

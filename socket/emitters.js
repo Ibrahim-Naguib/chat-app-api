@@ -16,7 +16,7 @@ export const emitTyping = (chatId, userId) => {
     throw new Error('Chat ID and user ID are required');
   }
   const io = getIO();
-  io.to(chatId).emit('typing', { userId });
+  io.to(chatId).emit('typing', { userId, chatId });
 };
 
 // Emit stop typing indicator to a chat room
@@ -25,7 +25,7 @@ export const emitStopTyping = (chatId, userId) => {
     throw new Error('Chat ID and user ID are required');
   }
   const io = getIO();
-  io.to(chatId).emit('stopTyping', { userId });
+  io.to(chatId).emit('stopTyping', { userId, chatId });
 };
 
 // Emit updated online users list to all clients

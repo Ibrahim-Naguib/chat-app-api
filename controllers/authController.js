@@ -8,7 +8,7 @@ import {
   hashResetCode,
   resetPasswordFields,
 } from '../services/authService.js';
-import { clearTokenCookies } from '../utils/tokens.js';
+import { clearTokenCookies, generateSocketToken } from '../utils/tokens.js';
 import { AuthenticationError } from '../utils/errors/customErrors.js';
 import jwt from 'jsonwebtoken';
 import config from '../config/envConfig.js';
@@ -145,5 +145,20 @@ export const resetPassword = asyncHandler(async (req, res) => {
   res.json({
     message:
       'Password reset successfully. Please log in with your new password.',
+  });
+});
+
+// Get socket token endpoint - requires API authentication via cookies
+export const getSocketToken = asyncHandler(async (req, res) => {
+  // This endpoint uses the existing auth middleware (cookie-based)
+  // to verify the user and then issues a socket-specific token
+  const userId = req.user.id;
+
+  const socketToken = generateSocketToken(userId);
+
+  res.json({
+    socketToken,
+    expiresIn: '1h',
+    message: 'Socket token generated successfully',
   });
 });

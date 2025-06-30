@@ -1,9 +1,10 @@
 import rateLimit from 'express-rate-limit';
+import config from '../config/envConfig.js';
 
 // General API rate limiter
 export const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per windowMs
+  max: config.nodeEnv === 'production' ? 100 : 1000, // More lenient in development
   message: 'Too many requests from this IP, please try again after 15 minutes',
   standardHeaders: true,
   legacyHeaders: false,
@@ -11,10 +12,9 @@ export const apiLimiter = rateLimit({
 
 // Auth-specific rate limiter (more strict)
 export const authLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  max: 10, // Limit each IP to 10 login/signup requests per hour
-  message:
-    'Too many auth attempts from this IP, please try again after an hour',
+  windowMs: config.nodeEnv === 'production' ? 60 * 60 * 1000 : 5 * 60 * 1000, // 1 hour in prod, 5 minutes in dev
+  max: config.nodeEnv === 'production' ? 10 : 100, // 10 in prod, 100 in dev
+  message: 'Too many auth attempts from this IP, please try again later',
   standardHeaders: true,
   legacyHeaders: false,
 });

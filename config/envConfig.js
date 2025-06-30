@@ -33,6 +33,7 @@ export const config = {
   mongoUri: process.env.MONGODB_URI,
   jwtAccessSecret: process.env.JWT_ACCESS_SECRET,
   jwtRefreshSecret: process.env.JWT_REFRESH_SECRET,
+  jwtSocketSecret: process.env.JWT_SOCKET_SECRET,
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '7d',
   allowedOrigins: process.env.ALLOWED_ORIGINS || 'http://localhost:3001',
   emailHost: process.env.EMAIL_HOST,

@@ -5,30 +5,36 @@ import { emitUpdateOnlineUsers } from './emitters.js';
 
 const onlineUsers = new Map();
 
-// Socket authentication middleware
+// Socket authentication middleware - uses auth object only
 const authMiddleware = async (socket, next) => {
   try {
-    const token = extractTokenFromCookies(socket.handshake.headers.cookie);
+    const token = socket.handshake.auth?.token;
+
+    console.log('Socket Auth Token:', token ? 'Token received' : 'No token');
+
     if (!token) {
-      return next(new Error('Authentication token is required'));
+      console.error('Socket Auth Error: No token found in auth object');
+      console.log('Auth object:', socket.handshake.auth);
+      return next(new Error('Token is required for socket authentication'));
     }
-    const decoded = jwt.verify(token, config.jwtAccessSecret);
+
+    const decoded = jwt.verify(
+      token,
+      config.jwtSocketSecret || config.jwtAccessSecret
+    );
+
+    // Verify this is a socket token (if type is present)
+    if (decoded.type && decoded.type !== 'socket') {
+      throw new Error('Invalid token type for socket authentication');
+    }
+
     socket.userId = decoded.id;
+    console.log(`Socket authenticated for user: ${decoded.id}`);
     next();
   } catch (error) {
     console.error('Socket Authentication Error:', error.message);
     return next(new Error('Authentication failed'));
   }
-};
-
-// Extract token from cookie string
-const extractTokenFromCookies = (cookies = '') => {
-  if (!cookies) return null;
-  return cookies
-    .split(';')
-    .map((c) => c.trim())
-    .find((c) => c.startsWith('accessToken='))
-    ?.split('=')[1];
 };
 
 // Handle new socket connections
