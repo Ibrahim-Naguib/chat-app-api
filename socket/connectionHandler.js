@@ -13,7 +13,10 @@ const authMiddleware = async (socket, next) => {
     // ONLY check for JWT token in the auth object - NO cookie fallback
     const token = socket.handshake.auth?.token;
 
-    console.log('Socket Auth - JWT Token:', token ? 'Token received' : 'No token found');
+    console.log(
+      'Socket Auth - JWT Token:',
+      token ? 'Token received' : 'No token found'
+    );
 
     if (!token) {
       console.error('Socket Auth Error: No JWT token found in auth object');
@@ -33,7 +36,9 @@ const authMiddleware = async (socket, next) => {
     }
 
     socket.userId = decoded.id;
-    console.log(`Socket authenticated successfully for user: ${decoded.id} (JWT-based)`);
+    console.log(
+      `Socket authenticated successfully for user: ${decoded.id} (JWT-based)`
+    );
     next();
   } catch (error) {
     console.error('Socket JWT Authentication Error:', error.message);
@@ -44,7 +49,7 @@ const authMiddleware = async (socket, next) => {
 // Handle new socket connections
 export const handleConnection = (io) => {
   // Apply authentication middleware
-  io.use(authMiddleware);
+  // io.use(authMiddleware);
 
   io.on('connection', (socket) => {
     const userId = socket.userId;

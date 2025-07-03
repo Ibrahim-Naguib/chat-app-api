@@ -21,23 +21,27 @@ export const findUserByEmail = async (
 };
 
 // Generate and set tokens
-export const generateAndSetTokens = async (user, res) => {
+export const generateAndSetTokens = async (user, res, forceRefresh = false) => {
   const { accessToken, refreshToken } = generateTokens(user._id);
-  user.refreshToken = refreshToken;
-  await user.save();
-  setTokenCookies(res, accessToken, refreshToken);
-  return { accessToken, refreshToken };
+  if (!user.refreshToken || forceRefresh) {
+    user.refreshToken = refreshToken;
+    await user.save();
+  }
+  setTokenCookies(res, accessToken, user.refreshToken);
+  return { accessToken, refreshToken: user.refreshToken };
 };
 
 // Generate tokens, save user, and set cookies
 export const authenticateUser = async (user, res) => {
-  await generateAndSetTokens(user, res);
+  const { accessToken, refreshToken } = generateTokens(user._id);
 
   return {
     _id: user._id,
     name: user.name,
     email: user.email,
     profilePicture: user.profilePicture,
+    accessToken: accessToken,
+    refreshToken: refreshToken,
   };
 };
 

@@ -31,7 +31,7 @@ export const generateSocketToken = (userId) => {
 export const setTokenCookies = (res, accessToken, refreshToken) => {
   res.cookie('accessToken', accessToken, {
     httpOnly: true,
-    secure: config.nodeEnv === 'production',
+    secure: true,
     sameSite: 'None',
     maxAge: 15 * 60 * 1000, // 15 minutes
     path: '/',
@@ -39,7 +39,7 @@ export const setTokenCookies = (res, accessToken, refreshToken) => {
 
   res.cookie('refreshToken', refreshToken, {
     httpOnly: true,
-    secure: config.nodeEnv === 'production',
+    secure: true,
     sameSite: 'None',
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   });
@@ -48,7 +48,7 @@ export const setTokenCookies = (res, accessToken, refreshToken) => {
 export const clearTokenCookies = (res) => {
   const cookieOptions = {
     httpOnly: true,
-    secure: config.nodeEnv === 'production',
+    secure: true,
     sameSite: 'None',
   };
 

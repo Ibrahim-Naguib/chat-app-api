@@ -8,7 +8,11 @@ import {
   hashResetCode,
   resetPasswordFields,
 } from '../services/authService.js';
-import { clearTokenCookies, generateSocketToken } from '../utils/tokens.js';
+import {
+  clearTokenCookies,
+  generateSocketToken,
+  generateTokens,
+} from '../utils/tokens.js';
 import { AuthenticationError } from '../utils/errors/customErrors.js';
 import jwt from 'jsonwebtoken';
 import config from '../config/envConfig.js';
@@ -45,7 +49,7 @@ export const login = asyncHandler(async (req, res) => {
 });
 
 export const refresh = asyncHandler(async (req, res) => {
-  const refreshToken = req.cookies.refreshToken;
+  const { refreshToken } = req.body;
 
   if (!refreshToken) {
     throw new AuthenticationError('Refresh token not found');
@@ -59,10 +63,16 @@ export const refresh = asyncHandler(async (req, res) => {
   }
   const user = await findUser({ _id: decoded.id }, 'User not found');
   if (user.refreshToken !== refreshToken) {
+    user.refreshToken = null;
+    await user.save();
     throw new AuthenticationError('Refresh token mismatch');
   }
-  await generateAndSetTokens(user, res);
-  res.json({ message: 'Tokens refreshed successfully' });
+  const { accessToken, newRefresh } = generateTokens(user._id);
+  res.json({
+    accessToken: accessToken,
+    refreshToken: newRefresh,
+    expiresIn: 900, // 15 minutes
+  });
 });
 
 export const logout = asyncHandler(async (req, res) => {
@@ -148,14 +158,8 @@ export const resetPassword = asyncHandler(async (req, res) => {
   });
 });
 
-// Get socket token endpoint - requires API authentication via cookies
-// This endpoint uses cookie-based authentication to verify the user
-// and then issues a JWT token specifically for Socket.IO authentication
 export const getSocketToken = asyncHandler(async (req, res) => {
-  // This endpoint uses the existing auth middleware (cookie-based)
-  // to verify the user and then issues a socket-specific JWT token
   const userId = req.user.id;
-  console.log('Generating socket JWT token for user:', userId);
 
   const socketToken = generateSocketToken(userId);
 
@@ -163,6 +167,5 @@ export const getSocketToken = asyncHandler(async (req, res) => {
     socketToken,
     expiresIn: '1h',
     message: 'Socket JWT token generated successfully',
-    note: 'This token is for Socket.IO authentication only, separate from API cookies',
   });
 });
