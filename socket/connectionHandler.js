@@ -32,8 +32,6 @@ export const handleConnection = (io) => {
   io.on('connection', (socket) => {
     const userId = socket.userId;
 
-    console.log(`User connected: ${userId}`);
-
     // Add user to online users
     onlineUsers.set(userId, socket.id);
     emitUpdateOnlineUsers(onlineUsers);
@@ -43,7 +41,6 @@ export const handleConnection = (io) => {
 
     // Handle user disconnect
     socket.on('disconnect', () => {
-      console.log(`User disconnected: ${userId}`);
       onlineUsers.delete(userId);
       emitUpdateOnlineUsers(onlineUsers);
     });

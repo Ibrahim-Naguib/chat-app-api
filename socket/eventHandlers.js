@@ -6,14 +6,12 @@ export const setupEventHandlers = (socket, userId) => {
   socket.on('joinRoom', (chatId) => {
     if (!chatId) return;
     socket.join(chatId);
-    console.log(`User ${userId} joined room: ${chatId}`);
   });
 
   // Leave a chat room
   socket.on('leaveRoom', (chatId) => {
     if (!chatId) return;
     socket.leave(chatId);
-    console.log(`User ${userId} left room: ${chatId}`);
   });
 
   // Handle typing events
