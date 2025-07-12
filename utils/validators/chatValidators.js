@@ -8,8 +8,6 @@ import {
 
 export const accessChatValidator = withValidation([validateEmail]);
 
-export const deleteChatValidator = withValidation([validateChatId]);
-
 export const createGroupChatValidator = withValidation([
   body('name').trim().notEmpty().withMessage('Group name is required'),
   body('users').custom((value) => {
@@ -51,5 +49,3 @@ export const removeFromGroupValidator = withValidation([
   validateChatId,
   validateUserId,
 ]);
-
-export const leaveGroupValidator = withValidation([validateChatId]);

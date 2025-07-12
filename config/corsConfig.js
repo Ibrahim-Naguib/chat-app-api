@@ -6,7 +6,7 @@ const corsOptions = {
       ? (origin, callback) => {
           const allowedOrigins = config.allowedOrigins
             ? config.allowedOrigins.split(',').map((url) => url.trim())
-            : ['https://chat-app-mu-plum.vercel.app'];
+            : ['http://localhost:4000'];
 
           if (!origin || allowedOrigins.includes(origin)) {
             callback(null, true);

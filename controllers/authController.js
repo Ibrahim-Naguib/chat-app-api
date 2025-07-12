@@ -4,7 +4,6 @@ import {
   findUser,
   findUserByEmail,
   authenticateUser,
-  generateAndSetTokens,
   hashResetCode,
   resetPasswordFields,
 } from '../services/authService.js';
@@ -12,6 +11,7 @@ import {
   clearTokenCookies,
   generateSocketToken,
   generateTokens,
+  setTokenCookie,
 } from '../utils/tokens.js';
 import { AuthenticationError } from '../utils/errors/customErrors.js';
 import jwt from 'jsonwebtoken';
@@ -49,7 +49,7 @@ export const login = asyncHandler(async (req, res) => {
 });
 
 export const refresh = asyncHandler(async (req, res) => {
-  const { refreshToken } = req.body;
+  const { refreshToken } = req.cookies;
 
   if (!refreshToken) {
     throw new AuthenticationError('Refresh token not found');
@@ -59,19 +59,34 @@ export const refresh = asyncHandler(async (req, res) => {
   try {
     decoded = jwt.verify(refreshToken, config.jwtRefreshSecret);
   } catch (error) {
-    throw new AuthenticationError('Invalid refresh token');
+    clearTokenCookies(res);
+
+    return res.status(401).json({ message: 'Invalid refresh token' });
   }
   const user = await findUser({ _id: decoded.id }, 'User not found');
-  if (user.refreshToken !== refreshToken) {
-    user.refreshToken = null;
-    await user.save();
-    throw new AuthenticationError('Refresh token mismatch');
+  if (!user || user.refreshToken !== refreshToken) {
+    clearTokenCookies(res);
+    if (user) {
+      user.refreshToken = null;
+      await user.save();
+    }
+    return res.status(401).json({ message: 'Refresh token mismatch' });
   }
-  const { accessToken, newRefresh } = generateTokens(user._id);
+  const { accessToken, refreshToken: newRefreshToken } = generateTokens(
+    user._id
+  );
+  user.refreshToken = newRefreshToken;
+  setTokenCookie(res, newRefreshToken);
+  await user.save();
+
   res.json({
-    accessToken: accessToken,
-    refreshToken: newRefresh,
-    expiresIn: 900, // 15 minutes
+    accessToken,
+    user: {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      profilePicture: user.profilePicture,
+    },
   });
 });
 

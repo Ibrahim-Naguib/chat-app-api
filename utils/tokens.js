@@ -28,19 +28,11 @@ export const generateSocketToken = (userId) => {
   );
 };
 
-export const setTokenCookies = (res, accessToken, refreshToken) => {
-  res.cookie('accessToken', accessToken, {
-    httpOnly: true,
-    secure: true,
-    sameSite: 'None',
-    maxAge: 15 * 60 * 1000, // 15 minutes
-    path: '/',
-  });
-
+export const setTokenCookie = (res, refreshToken) => {
   res.cookie('refreshToken', refreshToken, {
     httpOnly: true,
-    secure: true,
-    sameSite: 'None',
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax',
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   });
 };
@@ -48,10 +40,9 @@ export const setTokenCookies = (res, accessToken, refreshToken) => {
 export const clearTokenCookies = (res) => {
   const cookieOptions = {
     httpOnly: true,
-    secure: true,
-    sameSite: 'None',
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax',
   };
 
-  res.clearCookie('accessToken', cookieOptions);
   res.clearCookie('refreshToken', cookieOptions);
 };

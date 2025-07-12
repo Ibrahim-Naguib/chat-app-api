@@ -4,36 +4,22 @@ import config from '../config/envConfig.js';
 import { AuthenticationError } from '../utils/errors/customErrors.js';
 
 const protect = asyncHandler(async (req, res, next) => {
-  let token = null;
+  let token;
 
-  // Method 1: Check Authorization header (Bearer token)
-  const authHeader = req.headers.authorization;
-  if (authHeader && authHeader.startsWith('Bearer ')) {
-    token = authHeader.substring(7);
-    console.log('Auth middleware - using Bearer token for:', req.path);
+  if (req.headers.authorization?.startsWith('Bearer')) {
+    token = req.headers.authorization.split(' ')[1];
   }
-
-  // Method 2: Fallback to cookies if no Authorization header
+  console.log('Token:', token);
   if (!token) {
-    token = req.cookies.accessToken;
-    console.log('Auth middleware - using cookie token for:', req.path);
+    throw new AuthenticationError('Not authorized, no token');
   }
-
-  console.log('Access token present:', !!token);
-
-  if (!token) {
-    console.log('No access token found in Authorization header or cookies');
-    throw new AuthenticationError('Not authorized, no access token');
-  }
-
   try {
     const decoded = jwt.verify(token, config.jwtAccessSecret);
+    console.log('Decoded token:', decoded);
     req.user = decoded;
-    console.log('Token verified successfully for user:', decoded.id);
     next();
   } catch (error) {
-    console.log('Token verification failed:', error.message);
-    throw new AuthenticationError('Not authorized, invalid token');
+    throw new AuthenticationError('Not authorized, token failed');
   }
 });
 

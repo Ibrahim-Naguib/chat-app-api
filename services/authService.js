@@ -1,6 +1,6 @@
 import User from '../models/User.js';
 import { AuthenticationError } from '../utils/errors/customErrors.js';
-import { generateTokens, setTokenCookies } from '../utils/tokens.js';
+import { generateTokens, setTokenCookie } from '../utils/tokens.js';
 import crypto from 'crypto';
 
 // Find a user by filter criteria and throw error if not found
@@ -35,13 +35,19 @@ export const generateAndSetTokens = async (user, res, forceRefresh = false) => {
 export const authenticateUser = async (user, res) => {
   const { accessToken, refreshToken } = generateTokens(user._id);
 
+  user.refreshToken = refreshToken;
+  await user.save();
+
+  setTokenCookie(res, refreshToken);
+
   return {
-    _id: user._id,
-    name: user.name,
-    email: user.email,
-    profilePicture: user.profilePicture,
-    accessToken: accessToken,
-    refreshToken: refreshToken,
+    accessToken,
+    user: {
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      profilePicture: user.profilePicture,
+    },
   };
 };
 

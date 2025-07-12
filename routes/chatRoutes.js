@@ -3,24 +3,20 @@ import protect from '../middleware/authMiddleware.js';
 import {
   accessChat,
   getChats,
-  deleteChat,
   createGroupChat,
   renameGroup,
   addToGroup,
   removeFromGroup,
-  leaveGroup,
   getGroupPicture,
   uploadGroupPicture,
   removeGroupPicture,
 } from '../controllers/chatController.js';
 import {
   accessChatValidator,
-  deleteChatValidator,
   createGroupChatValidator,
   renameGroupValidator,
   addToGroupValidator,
   removeFromGroupValidator,
-  leaveGroupValidator,
 } from '../utils/validators/chatValidators.js';
 import { createUploader } from '../utils/fileUpload.js';
 import {
@@ -39,14 +35,12 @@ router.use(protect);
 router
   .route('/')
   .get(getChats)
-  .post(accessChatValidator, accessChat)
-  .delete(deleteChatValidator, deleteChat);
+  .post(accessChatValidator, accessChat);
 
 router.post('/group', createGroupChatValidator, createGroupChat);
 router.put('/group/rename', renameGroupValidator, renameGroup);
 router.put('/group/add', addToGroupValidator, addToGroup);
 router.put('/group/remove', removeFromGroupValidator, removeFromGroup);
-router.put('/group/leave', leaveGroupValidator, leaveGroup);
 
 router.post(
   '/group-picture',

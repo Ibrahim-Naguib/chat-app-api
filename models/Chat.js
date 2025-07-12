@@ -17,24 +17,6 @@ const chatSchema = new mongoose.Schema(
         ref: 'User',
       },
     ],
-    deletedBy: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-      },
-    ],
-    restoredAt: [
-      {
-        userId: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: 'User',
-        },
-        timestamp: {
-          type: Date,
-          default: Date.now,
-        },
-      },
-    ],
     latestMessage: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Message',

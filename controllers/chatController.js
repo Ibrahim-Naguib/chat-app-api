@@ -1,14 +1,11 @@
 import asyncHandler from 'express-async-handler';
 import { Chat } from '../models/Chat.js';
-import { Message } from '../models/Message.js';
 import { findUserByEmail } from '../services/authService.js';
 import { AppError } from '../utils/errors/AppError.js';
 import { removeFile, serveFile, uploadFile } from '../services/imageService.js';
 import {
-  handlePrivateChatDeletion,
   findExistingChat,
   createNewPrivateChat,
-  restoreDeletedChat,
   findChatById,
   ensureGroupAdmin,
   ensureUserInChat,
@@ -25,8 +22,7 @@ export const accessChat = asyncHandler(async (req, res) => {
 
   const chat = await findExistingChat(req.user.id, targetUser._id);
   if (chat) {
-    const { updatedChat } = await restoreDeletedChat(chat, req.user.id);
-    return res.json(updatedChat);
+    return res.json(chat);
   }
 
   const newChat = await createNewPrivateChat(req.user.id, targetUser);
@@ -36,7 +32,6 @@ export const accessChat = asyncHandler(async (req, res) => {
 export const getChats = asyncHandler(async (req, res) => {
   const chats = await Chat.find({
     users: req.user.id,
-    deletedBy: { $ne: req.user.id },
     $or: [
       { latestMessage: { $exists: true } },
       { createdBy: req.user.id },
@@ -57,25 +52,6 @@ export const getChats = asyncHandler(async (req, res) => {
     .select('-__v');
 
   res.json(chats);
-});
-
-// Delete a chat
-export const deleteChat = asyncHandler(async (req, res) => {
-  const { chatId } = req.body;
-  const chat = await findChatById(chatId, false);
-
-  ensureUserInChat(chat, req.user.id);
-
-  if (!chat.isGroupChat) {
-    const result = await handlePrivateChatDeletion(chat, req.user.id);
-    if (result.deleted) {
-      return res.status(200).json({ message: 'Chat permanently deleted' });
-    }
-  } else {
-    await Chat.findByIdAndDelete(chatId); // For group: permanent delete
-  }
-
-  res.status(200).json({ message: 'Chat deleted successfully' });
 });
 
 // Create group chat
@@ -165,39 +141,6 @@ export const removeFromGroup = asyncHandler(async (req, res) => {
   const updatedChat = await findChatById(chatId);
 
   res.json(updatedChat);
-});
-
-export const leaveGroup = asyncHandler(async (req, res) => {
-  const { chatId } = req.body;
-
-  const chat = await findChatById(chatId, false);
-
-  ensureUserInChat(chat, req.user.id);
-
-  const isAdmin = chat.groupAdmin.toString() === req.user.id;
-
-  chat.users = chat.users.filter((id) => id.toString() !== req.user.id);
-
-  if (chat.users.length === 0) {
-    await Message.deleteMany({ chat: chatId });
-
-    await Chat.findByIdAndDelete(chatId);
-    return res.status(200).json({
-      status: 'success',
-      message: 'Left group chat successfully',
-    });
-  }
-
-  if (isAdmin && chat.users.length > 0) {
-    chat.groupAdmin = chat.users[0];
-  }
-
-  await chat.save();
-
-  res.status(200).json({
-    status: 'success',
-    message: 'Left group chat successfully',
-  });
 });
 
 export const getGroupPicture = asyncHandler(async (req, res) => {

@@ -17,7 +17,7 @@ export const findChatById = async (chatId, populate = true) => {
       )
       .populate('latestMessage', '-__v');
   }
-  const chat = await query.select('-__v -deletedBy -restoredAt');
+  const chat = await query.select('-__v');
   if (!chat) {
     throw new NotFoundError('Chat not found');
   }
@@ -55,7 +55,7 @@ export const findExistingChat = async (userId, targetUserId) => {
       '-password -refreshToken -passwordResetCode -passwordResetExpires -passwordResetVerified -createdAt -updatedAt -__v'
     )
     .populate('latestMessage', '-__v')
-    .select('-__v -deletedBy -restoredAt');
+    .select('-__v');
 };
 
 // Create a new private chat between two users
@@ -71,70 +71,4 @@ export const createNewPrivateChat = async (userId, targetUser) => {
     'users',
     '-password -refreshToken -passwordResetCode -passwordResetExpires -passwordResetVerified -createdAt -updatedAt -__v'
   );
-};
-
-// Handle deletion logic for private chats
-export const handlePrivateChatDeletion = async (chat, userId) => {
-  if (!chat.deletedBy) chat.deletedBy = [];
-
-  if (!chat.deletedBy.includes(userId)) {
-    chat.deletedBy.push(userId);
-  }
-
-  if (chat.restoredAt) {
-    chat.restoredAt = chat.restoredAt.filter(
-      (record) => record.userId.toString() !== userId.toString()
-    );
-  }
-
-  if (chat.deletedBy.length === chat.users.length) {
-    await Message.deleteMany({ chat: chat._id });
-    await Chat.findByIdAndDelete(chat._id);
-    return { deleted: true };
-  }
-
-  await chat.save();
-  return { deleted: false };
-};
-
-// Handle restoration of a deleted chat when user accesses it
-export const restoreDeletedChat = async (chat, userId) => {
-  // Check if the current user had deleted this chat
-  if (!chat.deletedBy || !chat.deletedBy.includes(userId)) {
-    return { restoredUsers: [], updatedChat: chat }; // Nothing to restore
-  }
-
-  const restoredUsers = [
-    ...chat.deletedBy.filter((id) => id.toString() === userId.toString()),
-  ];
-
-  // Remove user from deletedBy array to restore the chat
-  chat.deletedBy = chat.deletedBy.filter(
-    (deletedUserId) => deletedUserId.toString() !== userId.toString()
-  );
-
-  // Add restoration timestamp for this user - set to current time
-  // This ensures they won't see old messages from before they deleted the chat
-  if (!chat.restoredAt) {
-    chat.restoredAt = [];
-  }
-
-  // Remove any existing restoration record for this user
-  chat.restoredAt = chat.restoredAt.filter(
-    (record) => record.userId.toString() !== userId.toString()
-  );
-
-  // Add new restoration record with current timestamp
-  // This will hide all messages sent before this moment
-  chat.restoredAt.push({
-    userId: userId,
-    timestamp: new Date(),
-  });
-
-  await chat.save();
-
-  // Return updated chat with correct latestMessage value
-  const updatedChat = await findChatById(chat._id);
-
-  return { restoredUsers, updatedChat };
 };

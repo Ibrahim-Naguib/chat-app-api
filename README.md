@@ -141,14 +141,6 @@ filename: string; // e.g., "chat-id-timestamp.png"
 }
 ```
 
-### 🔒 `DELETE /api/chats` — Delete Chat
-
-```json
-{
-  "chatId": "string"
-}
-```
-
 ### 🔒 `POST /api/chats/group` — Create Group Chat
 
 ```json
@@ -182,14 +174,6 @@ filename: string; // e.g., "chat-id-timestamp.png"
 {
   "chatId": "string",
   "userId": "string"
-}
-```
-
-### 🔒 `PUT /api/chats/group/leave` — Leave Group Chat
-
-```json
-{
-  "chatId": "string"
 }
 ```
 

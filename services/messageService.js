@@ -54,13 +54,6 @@ export const getMessagesService = async (
   ensureUserInChat(chat, user.id);
 
   const messageFilter = { chat: chatId };
-  const restorationRecord = chat.restoredAt?.find(
-    (r) => r.userId.toString() === user.id
-  );
-
-  if (restorationRecord) {
-    messageFilter.createdAt = { $gte: restorationRecord.timestamp };
-  }
 
   const totalDocs = await Message.countDocuments(messageFilter);
   const { skip, pagination } = buildPagination(page, limit, totalDocs);
