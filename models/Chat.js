@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { ValidationError } from '../utils/errors/customErrors.js';
 
 const chatSchema = new mongoose.Schema(
   {
@@ -46,7 +47,7 @@ const chatSchema = new mongoose.Schema(
 // Ensure at least 2 users in a chat
 chatSchema.pre('save', function (next) {
   if (this.users.length < 2) {
-    return next(new Error('Chat must have at least 2 users'));
+    return next(new ValidationError('Chat must have at least 2 users'));
   }
 
   // Only allow groupPicture for group chats

@@ -1,7 +1,6 @@
 import path from 'path';
 import asyncHandler from 'express-async-handler';
 
-import { AppError } from '../utils/errors/AppError.js';
 import { NotFoundError } from '../utils/errors/customErrors.js';
 import { deleteFile } from '../utils/fileUpload.js';
 import fs from 'fs';
@@ -26,7 +25,7 @@ export const serveFile = asyncHandler(async (req, res, directory) => {
 
     // Check if file exists
     if (!fs.existsSync(filePath)) {
-      return res.status(404).json({ message: 'Image not found' });
+      throw new NotFoundError('Image not found');
     }
 
     // Set Content-Type header dynamically based on file extension
@@ -42,8 +41,7 @@ export const serveFile = asyncHandler(async (req, res, directory) => {
     res.setHeader('Content-Type', contentType);
     res.sendFile(filePath);
   } catch (error) {
-    console.error('Error serving image:', error);
-    res.status(500).json({ message: 'Error serving image' });
+    throw error;
   }
 });
 

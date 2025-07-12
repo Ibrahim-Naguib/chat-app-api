@@ -61,7 +61,7 @@ export const refresh = asyncHandler(async (req, res) => {
   } catch (error) {
     clearTokenCookies(res);
 
-    return res.status(401).json({ message: 'Invalid refresh token' });
+    throw new AuthenticationError('Invalid refresh token');
   }
   const user = await findUser({ _id: decoded.id }, 'User not found');
   if (!user || user.refreshToken !== refreshToken) {
@@ -70,7 +70,7 @@ export const refresh = asyncHandler(async (req, res) => {
       user.refreshToken = null;
       await user.save();
     }
-    return res.status(401).json({ message: 'Refresh token mismatch' });
+    throw new AuthenticationError('Refresh token mismatch');
   }
   const { accessToken, refreshToken: newRefreshToken } = generateTokens(
     user._id

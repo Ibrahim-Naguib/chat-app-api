@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import config from '../config/envConfig.js';
+import { AuthenticationError } from '../utils/errors/customErrors.js';
 import { setupEventHandlers } from './eventHandlers.js';
 import { emitUpdateOnlineUsers } from './emitters.js';
 
@@ -10,7 +11,7 @@ const authMiddleware = async (socket, next) => {
     const token = socket.handshake.auth?.token;
 
     if (!token) {
-      return next(new Error('Not authorized, no token'));
+      return next(new AuthenticationError('Not authorized, no token'));
     }
 
     // Verify the JWT token using socket-specific secret
@@ -19,7 +20,7 @@ const authMiddleware = async (socket, next) => {
     socket.userId = decoded.id;
     next();
   } catch (error) {
-    return next(new Error('Not authorized, token failed'));
+    return next(new AuthenticationError('Not authorized, token failed'));
   }
 };
 

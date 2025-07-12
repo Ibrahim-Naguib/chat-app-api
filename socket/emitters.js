@@ -1,9 +1,10 @@
 import { getIO } from './index.js';
+import { ValidationError } from '../utils/errors/customErrors.js';
 
 // Emit a new message to a chat room and update chat list
 export const emitNewMessage = (chatId, message) => {
   if (!chatId || !message) {
-    throw new Error('Chat ID and message are required');
+    throw new ValidationError('Chat ID and message are required');
   }
   const io = getIO();
   io.to(chatId).emit('newMessage', message);
@@ -13,7 +14,7 @@ export const emitNewMessage = (chatId, message) => {
 // Emit typing indicator to a chat room
 export const emitTyping = (chatId, userId) => {
   if (!chatId || !userId) {
-    throw new Error('Chat ID and user ID are required');
+    throw new ValidationError('Chat ID and user ID are required');
   }
   const io = getIO();
   io.to(chatId).emit('typing', { userId, chatId });
@@ -22,7 +23,7 @@ export const emitTyping = (chatId, userId) => {
 // Emit stop typing indicator to a chat room
 export const emitStopTyping = (chatId, userId) => {
   if (!chatId || !userId) {
-    throw new Error('Chat ID and user ID are required');
+    throw new ValidationError('Chat ID and user ID are required');
   }
   const io = getIO();
   io.to(chatId).emit('stopTyping', { userId, chatId });

@@ -1,7 +1,7 @@
 import asyncHandler from 'express-async-handler';
 import { Chat } from '../models/Chat.js';
 import { findUserByEmail } from '../services/authService.js';
-import { AppError } from '../utils/errors/AppError.js';
+import { BadRequestError } from '../utils/errors/customErrors.js';
 import { removeFile, serveFile, uploadFile } from '../services/imageService.js';
 import {
   findExistingChat,
@@ -17,7 +17,7 @@ export const accessChat = asyncHandler(async (req, res) => {
 
   const targetUser = await findUserByEmail(email);
   if (targetUser._id.toString() === req.user.id) {
-    throw new AppError('Cannot create chat with yourself', 400);
+    throw new BadRequestError('Cannot create chat with yourself');
   }
 
   const chat = await findExistingChat(req.user.id, targetUser._id);
@@ -117,7 +117,7 @@ export const addToGroup = asyncHandler(async (req, res) => {
   if (
     chat.users.some((userId) => userId.toString() === userToAdd._id.toString())
   ) {
-    throw new AppError('User is already a member of this group', 400);
+    throw new BadRequestError('User is already a member of this group');
   }
 
   chat.users.push(userToAdd._id);

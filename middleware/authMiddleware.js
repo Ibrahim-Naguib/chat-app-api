@@ -9,13 +9,11 @@ const protect = asyncHandler(async (req, res, next) => {
   if (req.headers.authorization?.startsWith('Bearer')) {
     token = req.headers.authorization.split(' ')[1];
   }
-  console.log('Token:', token);
   if (!token) {
     throw new AuthenticationError('Not authorized, no token');
   }
   try {
     const decoded = jwt.verify(token, config.jwtAccessSecret);
-    console.log('Decoded token:', decoded);
     req.user = decoded;
     next();
   } catch (error) {

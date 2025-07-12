@@ -1,6 +1,7 @@
 import { Server } from 'socket.io';
 import config from '../config/envConfig.js';
 import { handleConnection } from './connectionHandler.js';
+import { ValidationError } from '../utils/errors/customErrors.js';
 
 let io;
 
@@ -29,7 +30,7 @@ export const initSocket = (server) => {
 };
 
 export const getIO = () => {
-  if (!io) throw new Error('Socket.io not initialized!');
+  if (!io) throw new ValidationError('Socket.io not initialized!');
   return io;
 };
 

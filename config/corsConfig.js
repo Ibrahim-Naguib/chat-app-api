@@ -1,4 +1,5 @@
 import config from './envConfig.js';
+import { ForbiddenError } from '../utils/errors/customErrors.js';
 
 const corsOptions = {
   origin:
@@ -12,7 +13,7 @@ const corsOptions = {
             callback(null, true);
           } else {
             console.warn(`Blocked by CORS: ${origin}`);
-            callback(new Error('Not allowed by CORS'));
+            callback(new ForbiddenError('Not allowed by CORS'));
           }
         }
       : true, // Allow all in dev

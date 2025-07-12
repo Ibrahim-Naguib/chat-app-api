@@ -1,11 +1,12 @@
 import { body } from 'express-validator';
 import { withValidation } from '../validation.js';
+import { ValidationError } from '../errors/customErrors.js';
 
 export const updateProfileValidation = withValidation([
   body().custom((value, { req }) => {
     const { name, currentPassword, newPassword } = req.body;
     if (!name && !currentPassword && !newPassword) {
-      throw new Error('Please provide a name or password to update');
+      throw new ValidationError('Please provide a name or password to update');
     }
     return true;
   }),
@@ -33,7 +34,7 @@ export const updateProfileValidation = withValidation([
   // Custom validation to ensure both passwords are provided together
   body('currentPassword').custom((value, { req }) => {
     if ((value && !req.body.newPassword) || (!value && req.body.newPassword)) {
-      throw new Error(
+      throw new ValidationError(
         'Both current password and new password are required to update password'
       );
     }

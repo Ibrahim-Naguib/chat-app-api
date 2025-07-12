@@ -1,5 +1,6 @@
 import { body } from 'express-validator';
 import { withValidation } from '../validation.js';
+import { ValidationError } from '../errors/customErrors.js';
 import {
   validateChatId,
   validateEmail,
@@ -12,10 +13,10 @@ export const createGroupChatValidator = withValidation([
   body('name').trim().notEmpty().withMessage('Group name is required'),
   body('users').custom((value) => {
     if (!Array.isArray(value)) {
-      throw new Error('Users must be an array');
+      throw new ValidationError('Users must be an array');
     }
     if (value.length < 2) {
-      throw new Error('Group chat must have at least 3 members including you');
+      throw new ValidationError('Group chat must have at least 3 members including you');
     }
 
     // Check for duplicates
@@ -23,7 +24,7 @@ export const createGroupChatValidator = withValidation([
       ...new Set(value.map((email) => email.toLowerCase())),
     ];
     if (uniqueEmails.length !== value.length) {
-      throw new Error('Duplicate email addresses are not allowed');
+      throw new ValidationError('Duplicate email addresses are not allowed');
     }
 
     return true;
