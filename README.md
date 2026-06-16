@@ -1,243 +1,168 @@
-# Backend API Documentation
+# Chat App API
 
-This file provides a structured reference for all backend API endpoints available in the chat application. It covers routes for authentication, user management, chat creation and interaction, message handling, and static file access. Each section lists the HTTP method, route, expected payload or parameters, and a brief explanation of its purpose.
+Backend API for a real-time chat application built with Express, MongoDB, Socket.IO, and TypeScript. The project includes JWT authentication, direct and group chats, message read/edit flows, Cloudinary uploads, email-based password reset, and Swagger documentation.
 
+## Features
 
-## Table of Contents
+- JWT-based auth with access, refresh, and socket tokens.
+- Direct chats and group chats.
+- Message sending, pagination, read receipts, and editing.
+- Profile and group picture uploads through Cloudinary.
+- Password reset flow with email verification.
+- Swagger UI documentation served from the app.
+- Vitest + Supertest route and service coverage.
 
-- [Authentication Routes](#authentication-routes-apiauth)
-- [User Routes](#user-routes-apiusers)
-- [Chat Routes](#chat-routes-apichats)
-- [Message Routes](#message-routes-apimessages)
-- [Static File Routes](#static-file-routes)
+## Tech Stack
 
----
+- Node.js
+- Express
+- TypeScript
+- MongoDB + Mongoose
+- Socket.IO
+- Zod validation
+- Swagger UI
+- Cloudinary
+- Resend
 
-## Authentication Routes (/api/auth)
+## Getting Started
 
-### 📮 `POST /api/auth/signup` — User Registration
+### Prerequisites
 
-```json
-{
-  "name": "string",
-  "email": "string",
-  "password": "string",
-  "confirmPassword": "string"
-}
+- Node.js 18+.
+- pnpm.
+- MongoDB connection string.
+
+### Install
+
+```bash
+pnpm install
 ```
 
-### 📮 `POST /api/auth/login` — User Login
+### Environment Variables
 
-```json
-{
-  "email": "string",
-  "password": "string"
-}
+Create a `.env` file with the following values:
+
+```env
+PORT=3000
+NODE_ENV=development
+MONGODB_URI=mongodb://localhost:27017/chat-app
+JWT_ACCESS_SECRET=your_access_secret
+JWT_REFRESH_SECRET=your_refresh_secret
+JWT_SOCKET_SECRET=your_socket_secret
+JWT_EXPIRES_IN=7d
+ALLOWED_ORIGINS=http://localhost:5173
+CLOUDINARY_CLOUD_NAME=
+CLOUDINARY_API_KEY=
+CLOUDINARY_API_SECRET=
+CLOUDINARY_FOLDER=chat-app
+RESEND_API_KEY=
 ```
 
-### 🔒 `POST /api/auth/refresh` — Refresh JWT Token
+The auth and socket secrets are required. Cloudinary and Resend are optional unless you want file uploads and email reset flows to work.
 
-```json
-{}
+### Run Locally
+
+```bash
+pnpm dev
 ```
 
-### 🔒 `POST /api/auth/logout` — User Logout
+The server starts on `http://localhost:3000` by default.
 
-```json
-{}
+## Scripts
+
+- `pnpm dev` - start the app in watch mode.
+- `pnpm build` - compile TypeScript to `dist`.
+- `pnpm start` - run the compiled server.
+- `pnpm typecheck` - run TypeScript without emitting files.
+- `pnpm test` - run the test suite once.
+- `pnpm test:watch` - run Vitest in watch mode.
+- `pnpm test:coverage` - run tests with coverage.
+- `pnpm lint` - lint the source and test files.
+- `pnpm format` - format source and test files.
+- `pnpm clean` - remove the build output.
+
+## API Documentation
+
+Swagger UI is available at:
+
+- `/api-docs`
+- `/api-docs.json`
+
+## API Base Path
+
+All working routes are mounted under a single base path:
+
+- `/api/auth`
+- `/api/messages`
+- `/api/chats`
+- `/api/users`
+
+## Endpoints
+
+### Auth
+
+- `POST /api/auth/signup`
+- `POST /api/auth/login`
+- `POST /api/auth/refresh`
+- `POST /api/auth/logout`
+- `GET /api/auth/socket-token`
+- `POST /api/auth/forgotPassword`
+- `POST /api/auth/verifyResetCode`
+- `PUT /api/auth/resetPassword`
+
+### Users
+
+- `GET /api/users/profile`
+- `PUT /api/users/profile`
+- `POST /api/users/profile-picture`
+- `DELETE /api/users/profile-picture`
+
+### Chats
+
+- `GET /api/chats`
+- `POST /api/chats`
+- `POST /api/chats/group`
+- `PUT /api/chats/group/rename`
+- `PUT /api/chats/group/add`
+- `PUT /api/chats/group/remove`
+- `POST /api/chats/group-picture`
+- `DELETE /api/chats/group-picture`
+
+### Messages
+
+- `POST /api/messages`
+- `GET /api/messages/chat/:chatId`
+- `POST /api/messages/read/:chatId`
+- `PUT /api/messages/:messageId`
+
+## Testing
+
+The repository uses MongoMemoryServer for isolated integration-style tests.
+
+```bash
+pnpm test
 ```
 
-### 📮 `POST /api/auth/forgotPassword` — Request Password Reset
+If you want a fast feedback loop while changing a single area, run the matching route file:
 
-```json
-{
-  "email": "string"
-}
+```bash
+pnpm test -- tests/routes/auth.test.ts
 ```
 
-### 📮 `POST /api/auth/verifyResetCode` — Verify Password Reset Code
+## Project Structure
 
-```json
-{
-  "resetCode": "string",
-  "email": "string"
-}
-```
-
-### 📮 `PUT /api/auth/resetPassword` — Reset User Password
-
-```json
-{
-  "newPassword": "string",
-  "email": "string"
-}
-```
-
----
-
-## User Routes (/api/users)
-
-### 🌐 `GET /api/users/profiles/:filename` — Get Profile Picture
-
-#### Path Parameters
-
-```ts
-filename: string; // e.g., "user-id-timestamp.png"
-```
-
-### 🔒 `GET /api/users/profile` — Get User Profile
-
-```json
-{}
-```
-
-### 🔒🖼️ `POST /api/users/profile-picture` — Upload Profile Picture
-
-#### FormData
-
-```ts
-image: File; // image file - jpeg, jpg, png, gif
-```
-
-### 🔒 `DELETE /api/users/profile-picture` — Remove Profile Picture
-
-```json
-{}
-```
-
-### 🔒 `PUT /api/users/profile` — Update User Profile
-
-```json
-{
-  "name": "string", // optional
-  "currentPassword": "string", // optional - required if updating password
-  "newPassword": "string" // optional - required if updating password
-}
-```
-
----
-
-## Chat Routes (/api/chats)
-
-### 🌐 `GET /api/chats/groups/:filename` — Get Group Picture
-
-#### Path Parameters
-
-```ts
-filename: string; // e.g., "chat-id-timestamp.png"
-```
-
-### 🔒 `GET /api/chats` — Get All User Chats
-
-```json
-{}
-```
-
-### 🔒 `POST /api/chats` — Access/Create One-on-One Chat
-
-```json
-{
-  "email": "string" // target user's email
-}
-```
-
-### 🔒 `POST /api/chats/group` — Create Group Chat
-
-```json
-{
-  "name": "string",
-  "users": ["string"] // array of email addresses, min 2 users
-}
-```
-
-### 🔒 `PUT /api/chats/group/rename` — Rename Group Chat
-
-```json
-{
-  "chatId": "string",
-  "chatName": "string"
-}
-```
-
-### 🔒 `PUT /api/chats/group/add` — Add User to Group
-
-```json
-{
-  "chatId": "string",
-  "email": "string"
-}
-```
-
-### 🔒 `PUT /api/chats/group/remove` — Remove User from Group
-
-```json
-{
-  "chatId": "string",
-  "userId": "string"
-}
-```
-
-### 🔒🖼️ `POST /api/chats/group-picture` — Upload Group Picture
-
-#### FormData
-
-```ts
-image: File; // image file - jpeg, jpg, png, gif
-chatId: string;
-```
-
-### 🔒 `DELETE /api/chats/group-picture` — Remove Group Picture
-
-```json
-{
-  "chatId": "string"
-}
-```
-
----
-
-## Message Routes (/api/messages)
-
-### 🔒 `POST /api/messages` — Send Message
-
-```json
-{
-  "content": "string",
-  "chatId": "string"
-}
-```
-
-### 🔒 `GET /api/messages/chat/:chatId` — Get Messages for Chat
-
-#### Path Parameters
-
-```ts
-chatId: string;
-```
-
-#### Query Parameters (optional)
-
-```ts
-page: number; // default: 1
-limit: number; // default: 10
-```
-
----
-
-## Static File Routes
-
-### 🌐 `GET /profiles/:filename` — Serve Profile Pictures
-
-#### Path Parameters
-
-```ts
-filename: string;
-```
-
-### 🌐 `GET /groups/:filename` — Serve Group Pictures
-
-#### Path Parameters
-
-```ts
-filename: string;
+```text
+src/
+  app.ts
+  config/
+  controllers/
+  docs/
+  middleware/
+  models/
+  routes/
+  services/
+  socket/
+  types/
+  utils/
+tests/
 ```

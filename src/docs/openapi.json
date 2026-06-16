@@ -1,0 +1,1112 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Chat App API",
+    "version": "1.0.0",
+    "description": "Real-time chat application API with socket.io support"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000/api",
+      "description": "Development"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "parameters": {
+      "chatId": {
+        "name": "chatId",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "pattern": "^[a-fA-F0-9]{24}$"
+        }
+      },
+      "messageId": {
+        "name": "messageId",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "pattern": "^[a-fA-F0-9]{24}$"
+        }
+      },
+      "page": {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1
+        }
+      },
+      "limit": {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 50,
+          "default": 10
+        }
+      }
+    },
+    "schemas": {
+      "UserSummary": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "profilePicture": {
+            "type": "string",
+            "format": "uri"
+          }
+        },
+        "required": ["_id", "name", "email", "profilePicture"]
+      },
+      "AuthResponse": {
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string"
+          },
+          "user": {
+            "$ref": "#/components/schemas/UserSummary"
+          }
+        },
+        "required": ["accessToken", "user"]
+      },
+      "RefreshResponse": {
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string"
+          },
+          "user": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "email": {
+                "type": "string",
+                "format": "email"
+              },
+              "profilePicture": {
+                "type": "string",
+                "format": "uri"
+              }
+            },
+            "required": ["id", "name", "email", "profilePicture"]
+          }
+        },
+        "required": ["accessToken", "user"]
+      },
+      "GenericMessageResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": ["message"]
+      },
+      "SocketTokenResponse": {
+        "type": "object",
+        "properties": {
+          "socketToken": {
+            "type": "string"
+          },
+          "expiresIn": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": ["socketToken", "expiresIn", "message"]
+      },
+      "UserProfile": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "profilePicture": {
+            "type": "string",
+            "format": "uri"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": ["_id", "name", "email", "profilePicture"]
+      },
+      "PictureUpdateResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "profilePicture": {
+            "type": "string",
+            "format": "uri"
+          },
+          "groupPicture": {
+            "type": "string",
+            "format": "uri"
+          }
+        },
+        "required": ["message"]
+      },
+      "ChatUser": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "profilePicture": {
+            "type": "string",
+            "format": "uri"
+          }
+        },
+        "required": ["_id", "name", "email", "profilePicture"]
+      },
+      "ChatMessagePreview": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string"
+          },
+          "content": {
+            "type": "string"
+          },
+          "sender": {
+            "$ref": "#/components/schemas/ChatUser"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": ["_id", "content", "sender"]
+      },
+      "Chat": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string"
+          },
+          "chatName": {
+            "type": "string"
+          },
+          "isGroupChat": {
+            "type": "boolean"
+          },
+          "users": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChatUser"
+            }
+          },
+          "latestMessage": {
+            "$ref": "#/components/schemas/ChatMessagePreview"
+          },
+          "groupAdmin": {
+            "$ref": "#/components/schemas/ChatUser"
+          },
+          "groupPicture": {
+            "type": "string",
+            "format": "uri"
+          },
+          "createdBy": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": ["_id", "isGroupChat", "users"]
+      },
+      "ReadReceipt": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "type": "string"
+          },
+          "readAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": ["user", "readAt"]
+      },
+      "Message": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string"
+          },
+          "sender": {
+            "$ref": "#/components/schemas/ChatUser"
+          },
+          "content": {
+            "type": "string"
+          },
+          "chat": {
+            "type": "object",
+            "properties": {
+              "_id": {
+                "type": "string"
+              },
+              "chatName": {
+                "type": "string"
+              },
+              "isGroupChat": {
+                "type": "boolean"
+              }
+            },
+            "required": ["_id", "chatName", "isGroupChat"]
+          },
+          "readBy": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReadReceipt"
+            }
+          },
+          "editedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "isEdited": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": ["_id", "sender", "content", "chat", "isEdited"]
+      },
+      "Pagination": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "type": "integer"
+          },
+          "limit": {
+            "type": "integer"
+          },
+          "numberOfPages": {
+            "type": "integer"
+          },
+          "next": {
+            "type": "integer"
+          },
+          "prev": {
+            "type": "integer"
+          }
+        },
+        "required": ["page", "limit", "numberOfPages"]
+      },
+      "PaginatedMessages": {
+        "type": "object",
+        "properties": {
+          "messages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Message"
+            }
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/Pagination"
+          }
+        },
+        "required": ["messages", "pagination"]
+      },
+      "MessageStatusResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          }
+        },
+        "required": ["success"]
+      }
+    }
+  },
+  "paths": {
+    "/auth/signup": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Register a new user",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string", "minLength": 2, "maxLength": 50 },
+                  "email": { "type": "string", "format": "email" },
+                  "password": { "type": "string", "minLength": 6 }
+                },
+                "required": ["name", "email", "password"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User registered successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AuthResponse" }
+              }
+            }
+          },
+          "400": { "description": "Validation error" },
+          "409": { "description": "User already exists" }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Login with email and password",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": { "type": "string", "format": "email" },
+                  "password": { "type": "string", "minLength": 6 }
+                },
+                "required": ["email", "password"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AuthResponse" }
+              }
+            }
+          },
+          "400": { "description": "Validation error" },
+          "401": { "description": "Invalid credentials" }
+        }
+      }
+    },
+    "/auth/refresh": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Refresh access token using the refresh cookie",
+        "responses": {
+          "200": {
+            "description": "Token refreshed successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RefreshResponse" }
+              }
+            }
+          },
+          "401": { "description": "Refresh token missing or invalid" }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Log out the current user",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "User logged out",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GenericMessageResponse" }
+              }
+            }
+          },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/auth/socket-token": {
+      "get": {
+        "tags": ["Authentication"],
+        "summary": "Generate a socket authentication token",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Socket token generated successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SocketTokenResponse" }
+              }
+            }
+          },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/auth/forgotPassword": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Request password reset email",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": { "type": "string", "format": "email" }
+                },
+                "required": ["email"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Reset code sent to email",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GenericMessageResponse" }
+              }
+            }
+          },
+          "400": { "description": "Validation error" },
+          "404": { "description": "User not found" }
+        }
+      }
+    },
+    "/auth/verifyResetCode": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Verify a password reset code",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": { "type": "string", "format": "email" },
+                  "resetCode": { "type": "string", "minLength": 6, "maxLength": 6 }
+                },
+                "required": ["email", "resetCode"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Reset code verified successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GenericMessageResponse" }
+              }
+            }
+          },
+          "400": { "description": "Validation error" },
+          "401": { "description": "Invalid or expired reset code" }
+        }
+      }
+    },
+    "/auth/resetPassword": {
+      "put": {
+        "tags": ["Authentication"],
+        "summary": "Reset a user password after code verification",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": { "type": "string", "format": "email" },
+                  "newPassword": { "type": "string", "minLength": 6 }
+                },
+                "required": ["email", "newPassword"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password reset successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GenericMessageResponse" }
+              }
+            }
+          },
+          "400": { "description": "Validation error" },
+          "401": { "description": "Reset code not verified" }
+        }
+      }
+    },
+    "/users/profile": {
+      "get": {
+        "tags": ["Users"],
+        "summary": "Get the authenticated user's profile",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "User profile returned successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UserProfile" }
+              }
+            }
+          },
+          "401": { "description": "Unauthorized" }
+        }
+      },
+      "put": {
+        "tags": ["Users"],
+        "summary": "Update the authenticated user's profile",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string", "minLength": 2, "maxLength": 50 },
+                  "currentPassword": { "type": "string", "minLength": 6 },
+                  "newPassword": { "type": "string", "minLength": 6 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Profile updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string" },
+                    "user": {
+                      "type": "object",
+                      "properties": {
+                        "_id": { "type": "string" },
+                        "name": { "type": "string" },
+                        "email": { "type": "string", "format": "email" },
+                        "profilePicture": { "type": "string", "format": "uri" }
+                      },
+                      "required": ["_id", "name", "email", "profilePicture"]
+                    }
+                  },
+                  "required": ["message", "user"]
+                }
+              }
+            }
+          },
+          "400": { "description": "Validation error" },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/users/profile-picture": {
+      "post": {
+        "tags": ["Users"],
+        "summary": "Upload a profile picture",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "image": { "type": "string", "format": "binary" }
+                },
+                "required": ["image"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Profile picture updated successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PictureUpdateResponse" }
+              }
+            }
+          },
+          "400": { "description": "Invalid or missing upload" },
+          "401": { "description": "Unauthorized" }
+        }
+      },
+      "delete": {
+        "tags": ["Users"],
+        "summary": "Remove the authenticated user's profile picture",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Profile picture removed successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PictureUpdateResponse" }
+              }
+            }
+          },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/chats": {
+      "get": {
+        "tags": ["Chats"],
+        "summary": "Get all chats for the authenticated user",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Chats returned successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Chat" }
+                }
+              }
+            }
+          },
+          "401": { "description": "Unauthorized" }
+        }
+      },
+      "post": {
+        "tags": ["Chats"],
+        "summary": "Access or create a direct chat",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": { "type": "string", "format": "email" }
+                },
+                "required": ["email"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Existing direct chat returned",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Chat" }
+              }
+            }
+          },
+          "201": {
+            "description": "Direct chat created successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Chat" }
+              }
+            }
+          },
+          "400": { "description": "Validation error or cannot create chat with yourself" },
+          "401": { "description": "Unauthorized" },
+          "404": { "description": "User not found" }
+        }
+      }
+    },
+    "/chats/group": {
+      "post": {
+        "tags": ["Chats"],
+        "summary": "Create a group chat",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string", "minLength": 3 },
+                  "users": {
+                    "type": "array",
+                    "items": { "type": "string", "format": "email" },
+                    "minItems": 2
+                  }
+                },
+                "required": ["name", "users"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Group chat created successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Chat" }
+              }
+            }
+          },
+          "400": { "description": "Validation error" },
+          "401": { "description": "Unauthorized" },
+          "404": { "description": "One or more group members were not found" }
+        }
+      }
+    },
+    "/chats/group/rename": {
+      "put": {
+        "tags": ["Chats"],
+        "summary": "Rename a group chat",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "chatId": { "type": "string" },
+                  "chatName": { "type": "string", "minLength": 3 }
+                },
+                "required": ["chatId", "chatName"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Group chat renamed successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Chat" }
+              }
+            }
+          },
+          "400": { "description": "Validation error" },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Only the group admin can rename the group" },
+          "404": { "description": "Chat not found" }
+        }
+      }
+    },
+    "/chats/group/add": {
+      "put": {
+        "tags": ["Chats"],
+        "summary": "Add a user to a group chat",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "chatId": { "type": "string" },
+                  "email": { "type": "string", "format": "email" }
+                },
+                "required": ["chatId", "email"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User added to the group successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Chat" }
+              }
+            }
+          },
+          "400": { "description": "Validation error or user already in the group" },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Only the group admin can add members" },
+          "404": { "description": "Chat or user not found" }
+        }
+      }
+    },
+    "/chats/group/remove": {
+      "put": {
+        "tags": ["Chats"],
+        "summary": "Remove a user from a group chat",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "chatId": { "type": "string" },
+                  "userId": { "type": "string" }
+                },
+                "required": ["chatId", "userId"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User removed from the group successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Chat" }
+              }
+            }
+          },
+          "400": { "description": "Validation error or invalid removal request" },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Only the group admin can remove members" },
+          "404": { "description": "Chat not found" }
+        }
+      }
+    },
+    "/chats/group-picture": {
+      "post": {
+        "tags": ["Chats"],
+        "summary": "Upload a group picture",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "chatId": { "type": "string" },
+                  "image": { "type": "string", "format": "binary" }
+                },
+                "required": ["chatId", "image"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Group picture updated successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PictureUpdateResponse" }
+              }
+            }
+          },
+          "400": { "description": "Invalid or missing upload" },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Only the group admin can update the group picture" },
+          "404": { "description": "Chat not found" }
+        }
+      },
+      "delete": {
+        "tags": ["Chats"],
+        "summary": "Remove a group picture",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "chatId": { "type": "string" }
+                },
+                "required": ["chatId"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Group picture removed successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PictureUpdateResponse" }
+              }
+            }
+          },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Only the group admin can remove the group picture" },
+          "404": { "description": "Chat not found" }
+        }
+      }
+    },
+    "/messages": {
+      "post": {
+        "tags": ["Messages"],
+        "summary": "Send a message to a chat",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "content": { "type": "string", "minLength": 1, "maxLength": 5000 },
+                  "chatId": { "type": "string" }
+                },
+                "required": ["content", "chatId"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Message sent successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Message" }
+              }
+            }
+          },
+          "400": { "description": "Validation error" },
+          "401": { "description": "Unauthorized" },
+          "404": { "description": "Chat not found" }
+        }
+      }
+    },
+    "/messages/chat/{chatId}": {
+      "get": {
+        "tags": ["Messages"],
+        "summary": "Get paginated messages for a chat",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "$ref": "#/components/parameters/chatId" },
+          { "$ref": "#/components/parameters/page" },
+          { "$ref": "#/components/parameters/limit" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Messages returned successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PaginatedMessages" }
+              }
+            }
+          },
+          "400": { "description": "Invalid chatId or pagination values" },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/messages/read/{chatId}": {
+      "post": {
+        "tags": ["Messages"],
+        "summary": "Mark chat messages as read",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "$ref": "#/components/parameters/chatId" }],
+        "responses": {
+          "200": {
+            "description": "Messages marked as read",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/MessageStatusResponse" }
+              }
+            }
+          },
+          "400": { "description": "Invalid chatId" },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/messages/{messageId}": {
+      "put": {
+        "tags": ["Messages"],
+        "summary": "Edit one of the authenticated user's messages",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "$ref": "#/components/parameters/messageId" }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "content": { "type": "string", "minLength": 1, "maxLength": 5000 }
+                },
+                "required": ["content"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Message edited successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Message" }
+              }
+            }
+          },
+          "400": { "description": "Validation error" },
+          "401": { "description": "Unauthorized" },
+          "403": { "description": "Cannot edit another user's message" },
+          "404": { "description": "Message not found" }
+        }
+      }
+    }
+  }
+}
